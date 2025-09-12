@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📡 Teacher QR Attendance</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 20px;
+      font-size: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    #qrContainer {
+      margin: 50px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: inline-block;
+    }
+    #info {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #555;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+  <header>📡 Teacher QR Attendance</header>
+
+  <div id="qrContainer">
+    <canvas id="qrCanvas"></canvas>
+    <p id="info">Loading QR...</p>
+  </div>
+
+  <script>
+    function generateQR() {
+      const ts = Date.now();
+      const classId = "CS101";
+      const token = Math.random().toString(36).substr(2, 8); // random token
+      const payload = { ts, classId, token };
+
+      QRCode.toCanvas(document.getElementById("qrCanvas"), JSON.stringify(payload), { width: 250 });
+      document.getElementById("info").innerText = "Last updated: " + new Date(ts).toLocaleTimeString();
+    }
+
+    // Generate QR immediately
+    generateQR();
+
+    // Rotate QR every 15 seconds
+    setInterval(generateQR, 15000);
+  </script>
+</body>
+</html>

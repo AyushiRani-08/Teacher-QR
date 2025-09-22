@@ -1,145 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>📡 Teacher Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<style>
-  body { font-family: 'Segoe UI', sans-serif; margin:0; display:flex; min-height:100vh; background:#f0f4f8; }
-  
-  /* Sidebar */
-  .sidebar { width:220px; background:linear-gradient(180deg,#1976d2,#42a5f5); color:white; padding-top:30px; display:flex; flex-direction:column; }
-  .sidebar h2 { text-align:center; margin-bottom:40px; font-size:22px; }
-  .sidebar a { padding:15px 25px; color:white; text-decoration:none; font-weight:bold; margin-bottom:5px; border-radius:8px; transition: background 0.3s; }
-  .sidebar a:hover { background: rgba(255,255,255,0.2); }
+  <meta charset="UTF-8">
+  <title>Teacher Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    /* --- Global --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', sans-serif; background: #f0f2f5; color: #333; }
+    h2 { color: #1e1e1e; margin-bottom: 20px; }
 
-  /* Main Content */
-  .main { flex:1; padding:30px; overflow-y:auto; }
-  header { font-size:28px; font-weight:bold; margin-bottom:30px; color:#1976d2; }
+    /* --- Layout --- */
+    .dashboard { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px;
+      background: #1976d2;
+      color: #fff;
+      padding: 25px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar h2 { text-align: center; margin-bottom: 30px; font-size: 26px; letter-spacing: 1px; }
+    .sidebar ul { list-style: none; padding: 0; flex: 1; }
+    .sidebar li {
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+    .sidebar li:hover, .sidebar li.active { background: #1565c0; }
+    .sidebar li.logout { margin-top: auto; background: #1976d2; }
+    .sidebar li.logout:hover { background: #1565c0; }
 
-  .container { display:flex; flex-wrap:wrap; gap:25px; }
+    .main-content { flex: 1; padding: 30px 40px; }
 
-  /* Class Card */
-  .class-card { background:white; border-radius:20px; box-shadow:0 12px 24px rgba(0,0,0,0.1); width:280px; padding:20px; position:relative; transition: transform 0.3s, box-shadow 0.3s; }
-  .class-card:hover { transform:translateY(-6px); box-shadow:0 20px 40px rgba(0,0,0,0.15); }
-  .class-card::before { content:''; position:absolute; width:150%; height:150%; top:-75%; left:-75%; background:linear-gradient(45deg,#42a5f5,#1976d2,#66bb6a); opacity:0.1; transform:rotate(45deg); }
+    /* --- Home Page --- */
+    .class-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: flex-start;
+    }
+    .class-card {
+      background: linear-gradient(145deg, #fff, #e3f2fd);
+      padding: 20px;
+      border-radius: 14px;
+      width: 200px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      transition: transform 0.3s, box-shadow 0.3s;
+      text-align: center;
+    }
+    .class-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+    }
+    .class-card h3 { margin-bottom: 8px; color: #0d47a1; }
+    .class-card p { font-size: 14px; color: #555; margin-bottom: 10px; }
+    .class-card button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+    .class-card button:hover { background: #1565c0; }
 
-  h3 { margin-bottom:10px; color:#212121; position:relative; z-index:1; }
-  p { font-size:14px; color:#555; margin:5px 0; position:relative; z-index:1; }
+    /* --- Attendance Page --- */
+    #attendanceClassSelect {
+      padding: 10px 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      width: 220px;
+    }
+    #attendanceClassSelect:focus {
+      border-color: #1976d2;
+      outline: none;
+      box-shadow: 0 0 5px #1976d2;
+    }
 
-  .generateBtn { margin-top:12px; padding:10px 20px; border-radius:12px; border:none; background:linear-gradient(to right,#42a5f5,#1976d2); color:white; font-weight:bold; cursor:pointer; transition: transform 0.2s, background 0.3s; position:relative; z-index:1; }
-  .generateBtn:hover { transform:scale(1.05); background:linear-gradient(to right,#1976d2,#42a5f5); }
+    #qrPage {
+      margin-top: 25px;
+      text-align: center;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      display: none;
+    }
 
-  .qr-container { display:none; text-align:center; margin-top:12px; position:relative; z-index:1; }
-  canvas { border:3px solid #1976d2; border-radius:12px; margin-top:8px; }
-  .info { margin-top:8px; font-size:13px; color:#333; word-break: break-word; }
-</style>
+    canvas { border: 4px solid #1976d2; border-radius: 12px; margin-bottom: 15px; }
+    .info { margin-bottom: 15px; font-weight: 500; color: #0d47a1; white-space: pre-line; }
+
+    #backBtn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #f44336;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+    #backBtn:hover { background: #d32f2f; }
+
+    /* --- Analytics Page --- */
+    #analyticsPage p { margin-top: 20px; font-size: 16px; color: #555; }
+
+  </style>
 </head>
 <body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>Teacher Panel</h2>
+      <ul>
+        <li class="active" onclick="showPage('homePage', this)">🏠 Home</li>
+        <li onclick="showPage('analyticsPage', this)">📊 Analytics</li>
+        <li onclick="showPage('attendancePage', this)">📝 Attendance</li>
+        <li class="logout" onclick="logout()">🚪 Logout</li>
+      </ul>
+    </div>
 
-<div class="sidebar">
-  <h2>Teacher Panel</h2>
-  <a href="#" onclick="showSection('home')">🏠 Home</a>
-  <a href="#" onclick="showSection('analytics')">📊 Analytics</a>
-  <a href="#" onclick="showSection('attendance')">📡 Attendance</a>
-  <a href="#" onclick="logout()">🚪 Logout</a>
-</div>
+    <!-- Main Content -->
+    <div class="main-content">
 
-<div class="main">
-  <header>📚 Dashboard</header>
-
-  <!-- Sections -->
-  <div id="home" class="section">
-    <h2>Classes Overview</h2>
-    <div class="container" id="classesContainer"></div>
-  </div>
-
-  <div id="analytics" class="section" style="display:none;">
-    <h2>📊 Analytics</h2>
-    <p>Charts and trends will appear here.</p>
-  </div>
-
-  <div id="attendance" class="section" style="display:none;">
-    <h2>📡 Attendance QR Generator</h2>
-    <div class="container" id="attendanceContainer"></div>
-  </div>
-</div>
-
-<script>
-  const classes = [
-    { code: "CS101", subject: "Programming Basics", room: "B101", students: 25 },
-    { code: "CS102", subject: "Data Structures", room: "B102", students: 22 },
-    { code: "CS103", subject: "Databases", room: "B103", students: 20 },
-    { code: "CS104", subject: "Web Development", room: "B104", students: 28 },
-  ];
-
-  let currentQRInterval = null;
-  let currentActiveCard = null;
-
-  function createClassCards(containerId) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    classes.forEach(cls => {
-      const card = document.createElement('div');
-      card.className = 'class-card';
-
-      card.innerHTML = `
-        <h3>${cls.code} - ${cls.subject}</h3>
-        <p><strong>Room:</strong> ${cls.room}</p>
-        <p><strong>Students:</strong> ${cls.students}</p>
-        <button class="generateBtn">Generate QR</button>
-        <div class="qr-container">
-          <canvas></canvas>
-          <p class="info"></p>
+      <!-- Home Page -->
+      <div id="homePage">
+        <h2>All Classes</h2>
+        <div class="class-cards">
+          <div class="class-card">
+            <h3>CS101</h3>
+            <p>Subject: Data Structures</p>
+            <p>Room: 101</p>
+            <button onclick="selectClass('CS101')">Generate QR</button>
+          </div>
+          <div class="class-card">
+            <h3>CS102</h3>
+            <p>Subject: Algorithms</p>
+            <p>Room: 102</p>
+            <button onclick="selectClass('CS102')">Generate QR</button>
+          </div>
+          <div class="class-card">
+            <h3>CS103</h3>
+            <p>Subject: Database</p>
+            <p>Room: 103</p>
+            <button onclick="selectClass('CS103')">Generate QR</button>
+          </div>
         </div>
-      `;
+      </div>
 
-      const btn = card.querySelector('.generateBtn');
-      const qrContainer = card.querySelector('.qr-container');
-      const canvas = card.querySelector('canvas');
-      const info = card.querySelector('.info');
+      <!-- Analytics Page -->
+      <div id="analyticsPage" style="display:none;">
+        <h2>Analytics</h2>
+        <p>Attendance stats and QR usage will be displayed here.</p>
+      </div>
 
-      btn.addEventListener('click', () => {
-        // Hide previous active QR
-        if (currentActiveCard && currentActiveCard !== card) {
-          clearInterval(currentQRInterval);
-          currentActiveCard.querySelector('.qr-container').style.display = 'none';
-        }
+      <!-- Attendance Page -->
+      <div id="attendancePage" style="display:none;">
+        <h2>Attendance QR Generator</h2>
+        <label>Select Class:
+          <select id="attendanceClassSelect">
+            <option value="">-- Select Class --</option>
+            <option value="CS101">CS101</option>
+            <option value="CS102">CS102</option>
+            <option value="CS103">CS103</option>
+          </select>
+        </label>
 
-        currentActiveCard = card;
-        qrContainer.style.display = 'block';
+        <div id="qrPage">
+          <canvas id="qrCanvas"></canvas>
+          <p class="info" id="qrInfo">QR details will appear here</p>
+          <button id="backBtn" onclick="backToClasses()">⬅ Back to Classes</button>
+        </div>
+      </div>
 
-        // Start generating QR every 15 sec
-        function generateQR() {
-          const ts = Date.now();
-          const token = Math.random().toString(36).substr(2,8);
-          const payload = { classId: cls.code, ts, token };
-          QRCode.toCanvas(canvas, JSON.stringify(payload), { width: 220 });
-          info.innerText = `Class: ${cls.code}\nToken: ${token}\nGenerated: ${new Date(ts).toLocaleTimeString()}`;
-        }
+    </div>
+  </div>
 
-        // Generate immediately & clear any previous interval
-        clearInterval(currentQRInterval);
-        generateQR();
-        currentQRInterval = setInterval(generateQR, 15000);
-      });
+  <script>
+    let qrIntervalId = null;
 
-      container.appendChild(card);
+    function showPage(pageId, elem) {
+      document.getElementById('homePage').style.display = 'none';
+      document.getElementById('analyticsPage').style.display = 'none';
+      document.getElementById('attendancePage').style.display = 'none';
+      document.getElementById(pageId).style.display = 'block';
+      document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+      if(elem) elem.classList.add('active');
+    }
+
+    function logout() { alert("Logging out..."); }
+
+    function selectClass(classId) {
+      showPage('attendancePage');
+      document.getElementById('attendanceClassSelect').value = classId;
+      startQRGenerator(classId);
+    }
+
+    function backToClasses() {
+      clearInterval(qrIntervalId);
+      document.getElementById('qrPage').style.display = 'none';
+      showPage('homePage');
+    }
+
+    function startQRGenerator(classId) {
+      document.getElementById('qrPage').style.display = 'block';
+      generateQR(classId);
+      clearInterval(qrIntervalId);
+      qrIntervalId = setInterval(() => generateQR(classId), 15000);
+    }
+
+    function generateQR(classId) {
+      const ts = Date.now();
+      const token = Math.random().toString(36).substr(2, 8);
+      const payload = { classId, ts, token };
+      QRCode.toCanvas(document.getElementById('qrCanvas'), JSON.stringify(payload), { width: 250 });
+      document.getElementById('qrInfo').innerText = `Class: ${classId}\nToken: ${token}\nLast Updated: ${new Date(ts).toLocaleTimeString()}`;
+    }
+
+    document.getElementById('attendanceClassSelect').addEventListener('change', function() {
+      const classId = this.value;
+      if (!classId) { clearInterval(qrIntervalId); document.getElementById('qrPage').style.display = 'none'; return; }
+      startQRGenerator(classId);
     });
-  }
-
-  createClassCards('classesContainer');
-  createClassCards('attendanceContainer');
-
-  function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(sec => sec.style.display='none');
-    document.getElementById(sectionId).style.display='block';
-  }
-
-  function logout() {
-    alert("🚪 Logging out...");
-  }
-</script>
-
+  </script>
 </body>
 </html>
